@@ -49,6 +49,7 @@ class Player():
         self.is_jump = False
         self.jump_count = 12
         self.rect = self.afk.get_rect(topleft=self.position)
+        self.kills = 0
 
     def walk(self):
         if keys[pygame.K_a] and keys[pygame.K_d]:
@@ -61,7 +62,7 @@ class Player():
             screen.blit(self.afk, self.position)
         if keys[pygame.K_a] and self.position[0] > 50:
             self.position[0] -= self.speed
-        if keys[pygame.K_d] and self.position[0] < 1780:
+        if keys[pygame.K_d] and (self.position[0] < 1780 or player.kills >= 10):
             self.position[0] += self.speed
         self.anim_count = (self.anim_count + 1) % 7
         self.rect = self.afk.get_rect(topleft=self.position)
@@ -129,7 +130,7 @@ class bullet():
         self.position += self.direction * self.speed
         self.rect = bullet.model.get_rect(topleft=self.position)
 
-
+player = Player()
 #text
 label = pygame.font.Font('Roboto-Black.ttf', 40)
 #рестарт
@@ -148,14 +149,22 @@ walk_label = label.render('движение влево/вправо - a/d', Fals
 #вернуться
 return_label = label.render('обратно', False, (255, 255, 255))
 return_label_rect = return_label.get_rect(topleft=(800, 800))
+#счётчик убийств
+k_l_t = 'Убийств: ' + str(player.kills)
+kills_label = label.render(k_l_t, False, (255, 255, 255))
 
-player = Player()
+
 done = True
 gameplay = False
 moves_menu = False
 while done:
     if gameplay:
+        if player.position[0] > 1900:
+            gameplay = False
         screen.blit(bg, (0, 0))
+        screen.blit(kills_label, (0, 0))
+        k_l_t = 'Убийств: ' + str(player.kills)
+        kills_label = label.render(k_l_t, False, (255, 255, 255))
         keys = pygame.key.get_pressed()
 
         #ходьба
@@ -175,6 +184,7 @@ while done:
                         if el1.rect.colliderect(el2):
                                 Enemy.list_in_game.pop(j)
                                 bullet.all.pop(i)
+                                player.kills += 1
 
 
 
@@ -231,7 +241,7 @@ while done:
     pygame.display.update()
     for event in pygame.event.get():
         #враги
-        if event.type == Enemy.enemy_timer:
+        if event.type == Enemy.enemy_timer and player.kills < 10:
             Enemy.spawn_enemy()
         #выстрел
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
